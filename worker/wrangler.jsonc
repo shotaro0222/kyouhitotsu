@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kyouhitotsu",
   "main": "src/index.ts",
-  "compatibility_date": "2026-07-15",
+  "compatibility_date": "2026-07-10",
   "kv_namespaces": [
     {
       "binding": "KYOUHITOTSU_KV",
