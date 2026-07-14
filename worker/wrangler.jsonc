@@ -43,3 +43,9 @@
 	 */
 	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }
+"kv_namespaces": [
+    {
+      "binding": "KYOUHITOTSU_KV",
+      "id": "47b9753b436a4c3d9eb64f1c3b8f5870"
+    }
+  ]
