@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // 2. 作成したAPIからデータを取得する
-        // ※URLはご自身の本番APIのURLです
-        const apiUrl = `https://kyouhitotsu.kyouhitotsu-dev.workers.dev/api/today?id=${id}`;
+        // encodeURIComponentを使用してIDをサニタイズ（安全性の向上）
+        const apiUrl = `https://kyouhitotsu.kyouhitotsu-dev.workers.dev/api/today?id=${encodeURIComponent(id)}`;
         const response = await fetch(apiUrl);
 
         if (!response.ok) {
@@ -32,6 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         titleEl.textContent = data.title;     // "今日の花"
         nameEl.textContent = data.name;       // "ひまわり"
         messageEl.textContent = data.message; // "あなたらしく咲く日です"
+
+        // 4. ブラウザタブのタイトルも動的に変更する
+        document.title = `${data.name} | きょうひとつ`;
+
+        // 5. アニメーションを付与してふわっと表示させる
+        // （テキストが書き換わった瞬間にクラスを追加してアニメーションを開始）
+        titleEl.classList.add('fade-in');
+        nameEl.classList.add('fade-in');
+        messageEl.classList.add('fade-in');
 
     } catch (error) {
         // エラー時の表示

@@ -38,3 +38,33 @@ body {
     font-size: 1.2rem;
     line-height: 2.5; /* 行間を広めにとって読みやすく */
 }
+
+/* --- 追加：ふわっと浮かび上がるアニメーション --- */
+.fade-in {
+    opacity: 0;
+    animation: fadeInAnimation 1.5s ease-out forwards;
+}
+
+/* 各要素の表示タイミングをずらして余韻を演出 */
+#type-title.fade-in {
+    animation-delay: 0s;
+}
+
+#main-name.fade-in {
+    animation-delay: 0.5s;
+}
+
+#message-text.fade-in {
+    animation-delay: 1.2s;
+}
+
+@keyframes fadeInAnimation {
+    0% { 
+        opacity: 0; 
+        transform: translateY(8px); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
