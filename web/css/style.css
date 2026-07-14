@@ -1,0 +1,40 @@
+/* ベースとなる色とフォントの設定 */
+:root {
+    --bg-color: #fcfaf2; /* 和紙のような、温かみのある白練（しろねり）色 */
+    --text-color: #2b2b2b; /* 真っ黒ではない、柔らかい墨色 */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Shippori Mincho', "Yu Mincho", "Zen Mincho", serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+}
+
+.container {
+    padding: 2rem;
+    max-width: 600px;
+    letter-spacing: 0.15em; /* 文字と文字の間隔を少し開けて、静けさと余白を演出 */
+}
+
+.sub-title {
+    font-size: 1rem;
+    color: #7b7c7d;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: normal;
+    margin-bottom: 1.5rem;
+}
+
+.message {
+    font-size: 1.2rem;
+    line-height: 2.5; /* 行間を広めにとって読みやすく */
+}
