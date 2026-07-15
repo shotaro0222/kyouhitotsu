@@ -1,65 +1,69 @@
-// KVのバインディング（接続名）を定義します
 export interface Env {
-  KYOUHITOTSU_KV: KVNamespace;
+  // wrangler.toml で設定した binding 名と一致させます
+  KYOUHITOTSU_DATA: KVNamespace;
 }
-
-// CORS（別ドメインからのアクセス許可）用の共通ヘッダーを定義
-const corsHeaders = {
-  'Content-Type': 'application/json; charset=utf-8',
-  'Access-Control-Allow-Origin': '*', // すべてのアクセス元を許可
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    
-    // 【重要追加】ブラウザからの「OPTIONS」リクエスト（事前確認）にOKを返す
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders
-      });
-    }
-
     const url = new URL(request.url);
 
-    // エンドポイントが /api/today の場合のみ処理する
-    if (url.pathname === '/api/today') {
-      // URLのクエリパラメータから id を取得 (?id=flower など)
-      const id = url.searchParams.get('id');
+    // どの画面からでもAPIを叩けるようにCORSヘッダーを用意
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json; charset=utf-8',
+    };
 
-      // IDが指定されていない場合はエラーを返す
-      if (!id) {
-        return new Response(JSON.stringify({ error: 'IDが指定されていません' }), {
-          status: 400,
-          headers: corsHeaders // エラー時にもCORSヘッダーを付与
-        });
-      }
+    // エンドポイント: /api/flower
+    if (url.pathname === '/api/flower') {
+      // 1. KVから365日分のデータを一括取得
+      const kvData = await env.KYOUHITOTSU_DATA.get('flower');
 
-      // KVからデータを取得 (キーのフォーマットは "item:xxx" と想定)
-      const kvKey = `item:${id}`;
-      const kvData = await env.KYOUHITOTSU_KV.get(kvKey);
-
-      // KVにデータが見つからない場合
       if (!kvData) {
         return new Response(JSON.stringify({ error: 'データが見つかりません' }), {
           status: 404,
-          headers: corsHeaders // エラー時にもCORSヘッダーを付与
+          headers: corsHeaders
         });
       }
 
-      // 取得したデータ(JSON文字列を想定)をそのまま返す
-      return new Response(kvData, {
-        status: 200,
-        headers: corsHeaders // 成功時にもCORSヘッダーを付与
-      });
+      try {
+        // 文字列(JSON)をJavaScriptのオブジェクトに変換
+        const allData = JSON.parse(kvData);
+
+        // 2. 日本時間で「今日の日付」を取得 (例: "07-15")
+        const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const dateKey = `${month}-${day}`; 
+
+        // 3. 365日分のデータから「今日」のデータを抽出
+        // ※ JSONが { "07-15": { "name": "ひまわり", ... } } という構造であることを想定しています
+        const todayData = allData[dateKey];
+
+        if (!todayData) {
+          return new Response(JSON.stringify({ error: '今日のデータがありません' }), {
+            status: 404,
+            headers: corsHeaders
+          });
+        }
+
+        // 4. 今日のデータだけを返す
+        return new Response(JSON.stringify(todayData), {
+          status: 200,
+          headers: corsHeaders
+        });
+
+      } catch (error) {
+        return new Response(JSON.stringify({ error: 'データの解析に失敗しました' }), {
+          status: 500,
+          headers: corsHeaders
+        });
+      }
     }
 
     // 存在しないURLへのアクセス
     return new Response(JSON.stringify({ error: 'Not Found' }), {
       status: 404,
-      headers: corsHeaders // エラー時にもCORSヘッダーを付与
+      headers: corsHeaders
     });
   },
 };

@@ -1,0 +1,10 @@
+name = "kyou-hitotsu"
+main = "src/index.ts"
+compatibility_date = "2026-07-15"
+
+[[kv_namespaces]]
+binding = "KYOUHITOTSU_DATA"
+id = "6affc51ec0034082a50a5e994fcd4f6e"
+
+[assets]
+directory = "web"

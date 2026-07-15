@@ -1,4 +1,10 @@
 {
-  "name": "kyouhitotsu",
-  "compatibility_date": "2026-07-14"
+	"name": "kyouhitotsu",
+	"compatibility_date": "2026-07-14",
+	"kv_namespaces": [
+		{
+			"binding": "KYOUHITOTSU_DATA",
+			"id": "6affc51ec0034082a50a5e994fcd4f6e"
+		}
+	]
 }
