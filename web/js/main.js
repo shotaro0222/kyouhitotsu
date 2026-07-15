@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // URLからIDを取得 (例: ?id=flower)
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
@@ -14,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // 同じドメイン内のAPIを呼び出す (例: /api/flower)
         const apiUrl = `/api/${id}`;
         const response = await fetch(apiUrl);
 
@@ -24,11 +22,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const data = await response.json();
 
-        // 画面のテキストを書き換える
-        // 今回のflower.jsonに合わせて表示
+        // 実際のJSONフォーマット（title, description）に合わせて画面にセット
         titleEl.textContent = id === 'flower' ? '今日の花' : 'きょうひとつ';
-        nameEl.textContent = data.name;       // 例: "ひまわり"
-        messageEl.textContent = data.message; // 例: "あなたらしく咲く日です"
+        nameEl.textContent = data.title;          // 例: "今日の花言葉"
+        messageEl.textContent = data.description; // 例: "クリスマス・ローズの花言葉は..."
 
     } catch (error) {
         nameEl.textContent = '読み込みエラー';
