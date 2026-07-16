@@ -2,10 +2,7 @@ export interface Env {
   KYOUHITOTSU_DATA: KVNamespace;
 }
 
-import bundledFlowerData from './data/flower.json';
-import bundledFortuneData from './data/fortune.json';
-import bundledMoonData from './data/moon.json';
-import bundledStoneData from './data/stone.json';
+import bundledDataMap from './data/generated';
 
 type DailyEntry = {
   day: number;
@@ -104,28 +101,16 @@ async function loadData(env: Env, key: string, bundledData: DailyEntry[], ctx: E
   return bundledData;
 }
 
-const endpointConfig: Record<string, { title: string; kvKey: string; bundledData: DailyEntry[] }> = {
-  flower: {
-    title: '今日の花',
-    kvKey: 'flower',
-    bundledData: bundledFlowerData as DailyEntry[],
-  },
-  fortune: {
-    title: '今日の運勢',
-    kvKey: 'fortune',
-    bundledData: bundledFortuneData as DailyEntry[],
-  },
-  moon: {
-    title: '今日の月',
-    kvKey: 'moon',
-    bundledData: bundledMoonData as DailyEntry[],
-  },
-  stone: {
-    title: '今日の石',
-    kvKey: 'stone',
-    bundledData: bundledStoneData as DailyEntry[],
-  },
-};
+function buildTypeTitle(key: string): string {
+  const knownTitles: Record<string, string> = {
+    flower: '今日の花',
+    fortune: '今日の運勢',
+    moon: '今日の月',
+    stone: '今日の石',
+    color: '今日の色',
+  };
+  return knownTitles[key] ?? `今日の${key}`;
+}
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -135,12 +120,16 @@ export default {
     };
 
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/api\/(flower|fortune|moon|stone)$/);
+    const match = url.pathname.match(/^\/api\/([a-z0-9_-]+)$/i);
     if (match) {
-      const key = match[1];
-      const config = endpointConfig[key];
+      const key = match[1].toLowerCase();
+      const bundledData = bundledDataMap[key as keyof typeof bundledDataMap] as DailyEntry[] | undefined;
+      if (!bundledData) {
+        return new Response(JSON.stringify({ error: '作品が見つかりません' }), { status: 404, headers: corsHeaders });
+      }
+
       try {
-        const allData = await loadData(env, config.kvKey, config.bundledData, ctx);
+        const allData = await loadData(env, key, bundledData, ctx);
         const todayData = getTodayData(allData);
         if (!todayData) {
           return new Response(JSON.stringify({ error: '該当なし' }), { status: 404, headers: corsHeaders });
@@ -148,7 +137,7 @@ export default {
         return new Response(
           JSON.stringify({
             ...todayData,
-            typeTitle: config.title,
+            typeTitle: buildTypeTitle(key),
           }),
           { status: 200, headers: corsHeaders }
         );
