@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "normalize:data": "node ./scripts/normalize-data-json.mjs",
+    "predev": "npm run normalize:data",
+    "predeploy": "npm run normalize:data",
+    "pretest": "npm run normalize:data",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",

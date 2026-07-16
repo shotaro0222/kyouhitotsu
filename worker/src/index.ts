@@ -25,13 +25,73 @@ function getTodayData(allData: DailyEntry[]): DailyEntry | undefined {
   return allData.find((item) => item.day === dayOfYear);
 }
 
-async function loadData(env: Env, key: string, bundledData: DailyEntry[]): Promise<DailyEntry[]> {
+function isDailyEntryArray(value: unknown): value is DailyEntry[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        item &&
+        typeof item === 'object' &&
+        typeof (item as DailyEntry).day === 'number' &&
+        typeof (item as DailyEntry).title === 'string' &&
+        typeof (item as DailyEntry).description === 'string' &&
+        typeof (item as DailyEntry).source === 'string'
+    )
+  );
+}
+
+function normalizeJsonArrayText(raw: string): string {
+  let normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim();
+
+  if (!normalized.startsWith('[') && normalized.startsWith('{')) {
+    normalized = `[\n${normalized}\n]`;
+  }
+
+  if (normalized.startsWith('[') && !normalized.endsWith(']')) {
+    normalized = `${normalized}\n]`;
+  }
+
+  // 手編集で起こりやすい "}{" の境界を ",{" に補正
+  normalized = normalized.replace(/}\s*{/g, '},\n{');
+  normalized = normalized.replace(/,\s*]/g, ']');
+
+  return normalized;
+}
+
+function parseDailyEntries(raw: string): { entries: DailyEntry[]; normalizedText: string; repaired: boolean } | null {
+  const originalTrimmed = raw.trim();
+
+  try {
+    const parsed = JSON.parse(originalTrimmed) as unknown;
+    if (!isDailyEntryArray(parsed)) {
+      return null;
+    }
+    return { entries: parsed, normalizedText: originalTrimmed, repaired: false };
+  } catch {
+    const normalizedText = normalizeJsonArrayText(raw);
+    try {
+      const parsed = JSON.parse(normalizedText) as unknown;
+      if (!isDailyEntryArray(parsed)) {
+        return null;
+      }
+      return { entries: parsed, normalizedText, repaired: true };
+    } catch {
+      return null;
+    }
+  }
+}
+
+async function loadData(env: Env, key: string, bundledData: DailyEntry[], ctx: ExecutionContext): Promise<DailyEntry[]> {
   try {
     const kvData = await env.KYOUHITOTSU_DATA?.get(key);
     if (kvData) {
-      const parsed = JSON.parse(kvData) as DailyEntry[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+      const parsedResult = parseDailyEntries(kvData);
+      if (parsedResult && parsedResult.entries.length > 0) {
+        if (parsedResult.repaired) {
+          // 読み込み時に壊れたJSONを自動修復してKVへ書き戻す
+          ctx.waitUntil(env.KYOUHITOTSU_DATA.put(key, parsedResult.normalizedText));
+        }
+        return parsedResult.entries;
       }
     }
   } catch {
@@ -72,7 +132,7 @@ export default {
       const key = match[1];
       const config = endpointConfig[key];
       try {
-        const allData = await loadData(env, config.kvKey, config.bundledData);
+        const allData = await loadData(env, config.kvKey, config.bundledData, ctx);
         const todayData = getTodayData(allData);
         if (!todayData) {
           return new Response(JSON.stringify({ error: '該当なし' }), { status: 404, headers: corsHeaders });
