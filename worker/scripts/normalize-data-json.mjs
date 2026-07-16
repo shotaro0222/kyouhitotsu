@@ -18,6 +18,7 @@ function normalizeJsonArrayText(raw) {
   }
 
   normalized = normalized.replace(/}\s*{/g, '},\n{');
+  normalized = normalized.replace(/]\s*\[/g, ',');
   normalized = normalized.replace(/,\s*]/g, ']');
 
   return normalized;
@@ -42,20 +43,32 @@ async function run() {
   const files = (await readdir(dataDir)).filter((name) => name.endsWith('.json'));
 
   let changed = 0;
+  let skipped = 0;
   for (const file of files) {
     const filePath = path.join(dataDir, file);
     const original = await readFile(filePath, 'utf8');
+
+    if (!original.trim()) {
+      skipped += 1;
+      console.warn(`[skip-empty] ${file}`);
+      continue;
+    }
+
     const normalized = normalizeJsonArrayText(original);
 
     let parsed;
     try {
       parsed = JSON.parse(normalized);
     } catch (error) {
-      throw new Error(`${file}: JSON補正後もパース失敗 (${error.message})`);
+      skipped += 1;
+      console.warn(`[skip-invalid-json] ${file}: ${error.message}`);
+      continue;
     }
 
     if (!isDailyEntryArray(parsed)) {
-      throw new Error(`${file}: 期待フォーマット(day/title/description/sourceの配列)ではありません`);
+      skipped += 1;
+      console.warn(`[skip-unsupported-schema] ${file}`);
+      continue;
     }
 
     const formatted = `${JSON.stringify(parsed, null, 2)}\n`;
@@ -68,7 +81,7 @@ async function run() {
     }
   }
 
-  console.log(`done: ${files.length} files checked, ${changed} files updated`);
+  console.log(`done: ${files.length} files checked, ${changed} files updated, ${skipped} files skipped`);
 }
 
 run().catch((error) => {

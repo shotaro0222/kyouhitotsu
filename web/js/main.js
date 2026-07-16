@@ -13,8 +13,7 @@ async function loadContent(id) {
 
         const data = await response.json();
 
-        // API側で返す種別タイトルを優先し、なければ既存の表示にフォールバック
-        titleEl.textContent = data.typeTitle ?? (id === 'flower' ? '今日の花' : 'きょうひとつ');
+        titleEl.textContent = data.typeTitle ?? 'きょうひとつ';
         nameEl.textContent = data.title;          // 例: "今日の花言葉"
         messageEl.textContent = data.description; // 例: "クリスマス・ローズの花言葉は..."
 
@@ -32,8 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nameEl = document.getElementById('main-name');
     const messageEl = document.getElementById('message-text');
 
-    // 無効なパラメータまたはパラメータなしの場合のフォールバック
-    if (!id || !['flower', 'fortune', 'moon'].includes(id)) {
+    if (!id) {
         nameEl.textContent = '作品が見つかりません';
         messageEl.textContent = 'QRコードから正しいURLでアクセスしてください。';
         return;

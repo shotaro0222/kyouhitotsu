@@ -5,6 +5,7 @@ export interface Env {
 import bundledFlowerData from './data/flower.json';
 import bundledFortuneData from './data/fortune.json';
 import bundledMoonData from './data/moon.json';
+import bundledStoneData from './data/stone.json';
 
 type DailyEntry = {
   day: number;
@@ -53,6 +54,8 @@ function normalizeJsonArrayText(raw: string): string {
 
   // 手編集で起こりやすい "}{" の境界を ",{" に補正
   normalized = normalized.replace(/}\s*{/g, '},\n{');
+  // 配列の結合ミス "...][..." を1つの配列として補正
+  normalized = normalized.replace(/]\s*\[/g, ',');
   normalized = normalized.replace(/,\s*]/g, ']');
 
   return normalized;
@@ -117,6 +120,11 @@ const endpointConfig: Record<string, { title: string; kvKey: string; bundledData
     kvKey: 'moon',
     bundledData: bundledMoonData as DailyEntry[],
   },
+  stone: {
+    title: '今日の石',
+    kvKey: 'stone',
+    bundledData: bundledStoneData as DailyEntry[],
+  },
 };
 
 export default {
@@ -127,7 +135,7 @@ export default {
     };
 
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/api\/(flower|fortune|moon)$/);
+    const match = url.pathname.match(/^\/api\/(flower|fortune|moon|stone)$/);
     if (match) {
       const key = match[1];
       const config = endpointConfig[key];
