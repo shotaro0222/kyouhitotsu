@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const data = await response.json();
 
-        // 実際のJSONフォーマット（title, description）に合わせて画面にセット
-        titleEl.textContent = id === 'flower' ? '今日の花' : 'きょうひとつ';
+        // API側で返す種別タイトルを優先し、なければ既存の表示にフォールバック
+        titleEl.textContent = data.typeTitle ?? (id === 'flower' ? '今日の花' : 'きょうひとつ');
         nameEl.textContent = data.title;          // 例: "今日の花言葉"
         messageEl.textContent = data.description; // 例: "クリスマス・ローズの花言葉は..."
 
