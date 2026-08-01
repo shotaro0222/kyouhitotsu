@@ -103,12 +103,24 @@ async function loadData(env: Env, key: string, bundledData: DailyEntry[], ctx: E
 
 function buildTypeTitle(key: string): string {
   const knownTitles: Record<string, string> = {
+    birthflower: '今日の誕生花',
+    coffee: '今日のコーヒー',
     flower: '今日の花',
     fortune: '今日の運勢',
+    horoscope: '今日の星座占い',
+    kanji: '今日の漢字',
     moon: '今日の月',
+    oneword: '今日のひとこと',
+    passage: '今日の一節',
+    proverb: '今日のことわざ',
+    quote: '今日の名言',
     stone: '今日の石',
     color: '今日の色',
+    colormean: '今日の色言葉',
     recipe: '今日のレシピ',
+    sky: '今日の空',
+    starsign: '今日の星座',
+    tea: '今日のお茶',
   };
   return knownTitles[key] ?? `今日の${key}`;
 }
