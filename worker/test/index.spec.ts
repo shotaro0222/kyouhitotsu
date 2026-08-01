@@ -1,3 +1,6 @@
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	env,
 	createExecutionContext,
@@ -7,23 +10,49 @@ import {
 import { describe, it, expect } from "vitest";
 import worker from "../src/index";
 
-// For now, you'll need to do something like this to get a correctly-typed
-// `Request` to pass to `worker.fetch()`.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 
-describe("Hello World worker", () => {
-	it("responds with Hello World! (unit style)", async () => {
-		const request = new IncomingRequest("http://example.com");
-		// Create an empty context to pass to `worker.fetch()`.
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, env, ctx);
-		// Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
-		await waitOnExecutionContext(ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
+describe("daily data", () => {
+	it("parses every JSON data file as daily entry arrays", async () => {
+		const dataDir = path.resolve(__dirname, "../src/data");
+		const files = (await readdir(dataDir)).filter((name) => name.endsWith(".json")).sort();
+
+		for (const file of files) {
+			const filePath = path.join(dataDir, file);
+			const text = await readFile(filePath, "utf8");
+			const parsed = JSON.parse(text);
+			expect(Array.isArray(parsed)).toBe(true);
+			for (const item of parsed) {
+				expect(item).toMatchObject({
+					day: expect.any(Number),
+					title: expect.any(String),
+					description: expect.any(String),
+					source: expect.any(String),
+				});
+			}
+		}
 	});
 
-	it("responds with Hello World! (integration style)", async () => {
-		const response = await SELF.fetch("https://example.com");
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
+	it("returns a daily entry for the flower API", async () => {
+		const request = new IncomingRequest("http://example.com/api/flower");
+		const ctx = createExecutionContext();
+		const response = await worker.fetch(request, env, ctx);
+		await waitOnExecutionContext(ctx);
+
+		expect(response.status).toBe(200);
+		const body = await response.json();
+		expect(body).toMatchObject({
+			typeTitle: "今日の花",
+			title: expect.any(String),
+			description: expect.any(String),
+			source: expect.any(String),
+		});
+	});
+
+	it("serves the worker over the test environment", async () => {
+		const response = await SELF.fetch("https://example.com/api/flower");
+		expect(response.status).toBe(200);
 	});
 });
