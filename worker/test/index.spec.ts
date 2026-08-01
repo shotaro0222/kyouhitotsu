@@ -51,6 +51,22 @@ describe("daily data", () => {
 		});
 	});
 
+	it("keeps recipe data at 365 unique daily entries", async () => {
+		const recipePath = path.resolve(__dirname, "../src/data/recipe.json");
+		const recipeText = await readFile(recipePath, "utf8");
+		const recipeData = JSON.parse(recipeText);
+		expect(Array.isArray(recipeData)).toBe(true);
+		expect(recipeData).toHaveLength(365);
+		const titles = recipeData.map((item: { title: string }) => item.title);
+		expect(new Set(titles).size).toBe(365);
+
+		const request = new IncomingRequest("http://example.com/api/recipe");
+		const ctx = createExecutionContext();
+		const response = await worker.fetch(request, env, ctx);
+		await waitOnExecutionContext(ctx);
+		expect(response.status).toBe(200);
+	});
+
 	it("serves the worker over the test environment", async () => {
 		const response = await SELF.fetch("https://example.com/api/flower");
 		expect(response.status).toBe(200);

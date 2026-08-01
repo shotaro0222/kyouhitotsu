@@ -12,10 +12,11 @@ import data9 from './oneword.json';
 import data10 from './passage.json';
 import data11 from './proverb.json';
 import data12 from './quote.json';
-import data13 from './sky.json';
-import data14 from './starsign.json';
-import data15 from './stone.json';
-import data16 from './tea.json';
+import data13 from './recipe.json';
+import data14 from './sky.json';
+import data15 from './starsign.json';
+import data16 from './stone.json';
+import data17 from './tea.json';
 
 const bundledDataMap: Record<string, unknown> = {
   'birthflower': data0,
@@ -31,10 +32,11 @@ const bundledDataMap: Record<string, unknown> = {
   'passage': data10,
   'proverb': data11,
   'quote': data12,
-  'sky': data13,
-  'starsign': data14,
-  'stone': data15,
-  'tea': data16,
+  'recipe': data13,
+  'sky': data14,
+  'starsign': data15,
+  'stone': data16,
+  'tea': data17,
 };
 
 export default bundledDataMap;

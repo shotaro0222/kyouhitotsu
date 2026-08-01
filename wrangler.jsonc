@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kyou-hitotsu",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2026-07-15",
+  "assets": {
+    "directory": "web"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "KYOUHITOTSU_DATA",
+      "id": "6affc51ec0034082a50a5e994fcd4f6e"
+    }
+  ],
+  "build": {
+    "command": "npm --prefix worker run normalize:data"
+  }
+}

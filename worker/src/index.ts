@@ -108,6 +108,7 @@ function buildTypeTitle(key: string): string {
     moon: '今日の月',
     stone: '今日の石',
     color: '今日の色',
+    recipe: '今日のレシピ',
   };
   return knownTitles[key] ?? `今日の${key}`;
 }
