@@ -11,6 +11,14 @@ type DailyEntry = {
   source: string;
 };
 
+function hasJapaneseText(value: string): boolean {
+  return /[\u3040-\u30FF\u3400-\u9FFF]/.test(value);
+}
+
+function hasLikelyJapaneseEntries(entries: DailyEntry[]): boolean {
+  return entries.some((entry) => hasJapaneseText(entry.title) || hasJapaneseText(entry.description));
+}
+
 function getTodayDayOfYearInJst(): number {
   const jstDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
   const start = new Date(jstDate.getFullYear(), 0, 0);
@@ -87,6 +95,12 @@ async function loadData(env: Env, key: string, bundledData: DailyEntry[], ctx: E
     if (kvData) {
       const parsedResult = parseDailyEntries(kvData);
       if (parsedResult && parsedResult.entries.length > 0) {
+        if (key === 'quote' && !hasLikelyJapaneseEntries(parsedResult.entries) && hasLikelyJapaneseEntries(bundledData)) {
+          // quote のみ、KV に古い英語データが残っていたら同梱日本語データへ自動復旧
+          ctx.waitUntil(env.KYOUHITOTSU_DATA.put(key, JSON.stringify(bundledData)));
+          return bundledData;
+        }
+
         if (parsedResult.repaired) {
           // 読み込み時に壊れたJSONを自動修復してKVへ書き戻す
           ctx.waitUntil(env.KYOUHITOTSU_DATA.put(key, parsedResult.normalizedText));
@@ -121,7 +135,6 @@ function buildTypeTitle(key: string): string {
     sky: '今日の空',
     starsign: '今日の星座',
     tea: '今日のお茶',
-    quote: '今日の名言',
   };
   return knownTitles[key] ?? `今日の${key}`;
 }
