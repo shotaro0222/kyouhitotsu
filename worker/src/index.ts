@@ -121,6 +121,7 @@ function buildTypeTitle(key: string): string {
     sky: '今日の空',
     starsign: '今日の星座',
     tea: '今日のお茶',
+    quote: '今日の名言',
   };
   return knownTitles[key] ?? `今日の${key}`;
 }
